@@ -101,17 +101,14 @@ func main() {
 		log.Println("API key authentication enabled for pack size modifications")
 	}
 
-	// Compression middleware
-	compress := middleware.CompressionMiddleware
-
-	// Setup routes with middleware (compression + rate limiting + CORS)
+	// Setup routes with middleware (rate limiting + CORS)
 	http.HandleFunc("/health", handlers.EnableCORS(handler.HealthCheck))
 
-	// Calculator endpoint with compression, rate limiting, and CORS
-	http.HandleFunc("/api/calculate", handlers.EnableCORS(compress(rateLimit(handler.CalculatePacks))))
+	// Calculator endpoint with rate limiting and CORS
+	http.HandleFunc("/api/calculate", handlers.EnableCORS(rateLimit(handler.CalculatePacks)))
 
-	// Pack sizes endpoint with compression, rate limiting, and optional auth
-	http.HandleFunc("/api/packs", handlers.EnableCORS(compress(rateLimit(apiKeyAuth.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	// Pack sizes endpoint with rate limiting and optional auth
+	http.HandleFunc("/api/packs", handlers.EnableCORS(rateLimit(apiKeyAuth.AuthMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			handler.GetPackSizes(w, r)
@@ -120,13 +117,13 @@ func main() {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-	})))))
+	}))))
 
-	// Delete pack size with compression, rate limiting, and optional auth
-	http.HandleFunc("/api/packs/", handlers.EnableCORS(compress(rateLimit(apiKeyAuth.AuthMiddleware(handler.DeletePackSize)))))
+	// Delete pack size with rate limiting and optional auth
+	http.HandleFunc("/api/packs/", handlers.EnableCORS(rateLimit(apiKeyAuth.AuthMiddleware(handler.DeletePackSize))))
 
-	// Order history with compression and rate limiting
-	http.HandleFunc("/api/orders", handlers.EnableCORS(compress(rateLimit(handler.GetOrders))))
+	// Order history with rate limiting
+	http.HandleFunc("/api/orders", handlers.EnableCORS(rateLimit(handler.GetOrders)))
 
 	// Configure HTTP server
 	server := &http.Server{
