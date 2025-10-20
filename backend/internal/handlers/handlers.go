@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 	"pack-calculator/internal/cache"
@@ -276,26 +275,13 @@ func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 
 // respondJSON writes a buffered JSON response for better performance
 func respondJSON(w http.ResponseWriter, status int, data interface{}) {
-	// Buffer response to avoid multiple syscalls
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(data); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
 	w.WriteHeader(status)
 
-	// Write response and flush
-	if _, err := w.Write(buf.Bytes()); err != nil {
+	// Let Go handle the response encoding and Content-Length automatically
+	if err := json.NewEncoder(w).Encode(data); err != nil {
 		// Log error but don't fail the request
-		fmt.Printf("Error writing response: %v\n", err)
+		fmt.Printf("Error encoding response: %v\n", err)
 		return
-	}
-
-	// Flush the response to ensure it's sent
-	if flusher, ok := w.(http.Flusher); ok {
-		flusher.Flush()
 	}
 }
