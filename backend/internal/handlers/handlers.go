@@ -286,5 +286,16 @@ func respondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
 	w.WriteHeader(status)
-	w.Write(buf.Bytes())
+
+	// Write response and flush
+	if _, err := w.Write(buf.Bytes()); err != nil {
+		// Log error but don't fail the request
+		fmt.Printf("Error writing response: %v\n", err)
+		return
+	}
+
+	// Flush the response to ensure it's sent
+	if flusher, ok := w.(http.Flusher); ok {
+		flusher.Flush()
+	}
 }
