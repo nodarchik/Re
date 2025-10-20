@@ -128,10 +128,18 @@ func main() {
 	// Order history with compression and rate limiting
 	http.HandleFunc("/api/orders", handlers.EnableCORS(compress(rateLimit(handler.GetOrders))))
 
+	// Configure HTTP server
+	server := &http.Server{
+		Addr:         fmt.Sprintf("0.0.0.0:%s", port),
+		Handler:      nil,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
 	// Start server
-	addr := fmt.Sprintf("0.0.0.0:%s", port)
-	log.Printf("Server starting on %s", addr)
-	if err := http.ListenAndServe(addr, nil); err != nil {
+	log.Printf("Server starting on %s", server.Addr)
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
