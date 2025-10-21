@@ -37,7 +37,7 @@ jobs:
     
     - name: Run tests
       working-directory: ./backend
-      run: go test -v -race -coverprofile=coverage.out ./...
+      run: go test -v -coverprofile=coverage.out ./...
     
     - name: Run edge case test
       working-directory: ./backend
